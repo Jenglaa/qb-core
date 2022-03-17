@@ -1,3 +1,4 @@
+--  test
 -- Player load and unload handling
 -- New method for checking if logged in across all scripts (optional)
 -- if LocalPlayer.state['isLoggedIn'] then
