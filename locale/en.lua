@@ -9,7 +9,10 @@ local Translations = {
         item_not_exist = 'Item does not exist',
         too_heavy = 'Inventory too full'
     },
-    success = {},
+    success = {
+        invoice_burgershot = "%{value} telah membayar makanan"
+
+    },
     info = {
         received_paycheck = 'You received your paycheck of $%{value}',
         job_info = 'Job: %{value} | Grade: %{value2} | Duty: %{value3}',
