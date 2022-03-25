@@ -307,4 +307,35 @@ QBShared.Jobs = {
             },
         },
     },
+
+    ['tuner'] = {
+        label = 'Tuner Autos',
+        defaultDuty = false,
+        grades = {
+            ['0'] = {
+                name = 'Recruit',
+                payment = 500
+            },
+            ['1'] = {
+                name = 'Mechanic',
+                payment = 750
+            },
+            ['2'] = {
+                name = 'Manager',
+                isboss = true,
+                payment = 1000
+            
+            },
+            ['3'] = {
+                name = 'Co-Owner',
+                isboss = true,
+                payment = 1250
+            },
+            ['4'] = {
+                name = 'Owner',
+                isboss = true,
+                payment = 1500
+            },
+        },
+    },    
 }
