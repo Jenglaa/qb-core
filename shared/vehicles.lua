@@ -4473,8 +4473,4 @@ QBShared.Vehicles = {
 		['hash'] = `policeb`,
 		['shop'] = 'pdm',
 	},
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 41bdabd2aceb1f09bc60763c83fb1d6ebc781a30
