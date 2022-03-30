@@ -254,8 +254,12 @@ function QBCore.Player.CreatePlayer(PlayerData)
         amount = tonumber(amount)
         if amount < 0 then return end
         if not self.PlayerData.money[moneytype] then return false end
-        self.PlayerData.money[moneytype] = self.PlayerData.money[moneytype] + amount
-        self.Functions.UpdatePlayerData()
+        if moneytype == 'cash' then
+            self.Functions.AddItem('cash', amount)
+        else
+            self.PlayerData.money[moneytype] = self.PlayerData.money[moneytype] + amount
+            self.Functions.UpdatePlayerData()
+        end
         if amount > 100000 then
             TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'AddMoney', 'lightgreen', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') added, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype], true)
         else
@@ -271,15 +275,23 @@ function QBCore.Player.CreatePlayer(PlayerData)
         amount = tonumber(amount)
         if amount < 0 then return end
         if not self.PlayerData.money[moneytype] then return false end
-        for _, mtype in pairs(QBCore.Config.Money.DontAllowMinus) do
-            if mtype == moneytype then
-                if (self.PlayerData.money[moneytype] - amount) < 0 then
+        if moneytype == 'cash' then
+			if self.Functions.GetItemByName('cash') ~= nil then
+				if self.Functions.GetCash() >= amount then
+					self.Functions.RemoveItem('cash', amount)
+                else
                     return false
                 end
             end
+        else
+            for _, mtype in pairs(QBCore.Config.Money.DontAllowMinus) do
+                if mtype == moneytype then
+                    if (self.PlayerData.money[moneytype] - amount) < 0 then return false end
+                end
+            end
+			self.PlayerData.money[moneytype] = self.PlayerData.money[moneytype] - amount
+			self.Functions.UpdatePlayerData()
         end
-        self.PlayerData.money[moneytype] = self.PlayerData.money[moneytype] - amount
-        self.Functions.UpdatePlayerData()
         if amount > 100000 then
             TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'RemoveMoney', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') removed, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype], true)
         else
@@ -298,8 +310,21 @@ function QBCore.Player.CreatePlayer(PlayerData)
         amount = tonumber(amount)
         if amount < 0 then return false end
         if not self.PlayerData.money[moneytype] then return false end
-        self.PlayerData.money[moneytype] = amount
-        self.Functions.UpdatePlayerData()
+        if moneytype == 'cash' then
+			if self.Functions.GetItemByName('cash') ~= nil then
+				local pgggagamtestte = self.Functions.GetItemByName('cash').amount
+				self.Functions.RemoveItem('cash', pgggagamtestte)
+				self.Functions.AddItem('cash', amount)
+                self.PlayerData.money[moneytype] = amount
+				self.Functions.UpdatePlayerData()
+			else
+				self.Functions.AddItem('cash', amount)
+				self.Functions.UpdatePlayerData()
+			end
+		elseif self.PlayerData.money[moneytype] ~= nil then
+			self.PlayerData.money[moneytype] = amount
+			self.Functions.UpdatePlayerData()
+		end
         TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'SetMoney', 'green', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') set, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype])
         return true
     end
@@ -307,7 +332,24 @@ function QBCore.Player.CreatePlayer(PlayerData)
     function self.Functions.GetMoney(moneytype)
         if not moneytype then return false end
         moneytype = moneytype:lower()
+        if(moneytype == 'cash') then
+            self.PlayerData.money[moneytype] = self.Functions.GetCash()
+            self.Functions.UpdatePlayerData()
+        end
         return self.PlayerData.money[moneytype]
+    end
+
+       --------- Cash ---------
+    function self.Functions.GetCash()
+        item = 'cash'
+        local getcurrentcash = QBCore.Player.GetSlotsByItem(self.PlayerData.items, item)
+        local totalcash = 0
+        if(getcurrentcash) then
+            for _, cash in pairs(getcurrentcash) do
+                totalcash = totalcash + self.PlayerData.items[cash].amount
+            end
+        end
+        return totalcash
     end
 
     function self.Functions.AddItem(item, amount, slot, info)
@@ -328,11 +370,19 @@ function QBCore.Player.CreatePlayer(PlayerData)
             if (slot and self.PlayerData.items[slot]) and (self.PlayerData.items[slot].name:lower() == item:lower()) and (itemInfo['type'] == 'item' and not itemInfo['unique']) then
                 self.PlayerData.items[slot].amount = self.PlayerData.items[slot].amount + amount
                 self.Functions.UpdatePlayerData()
+                if(item == 'cash') then
+                    self.PlayerData.money['cash'] = self.Functions.GetCash()
+                    self.Functions.UpdatePlayerData()
+                end
                 TriggerEvent('qb-log:server:CreateLog', 'playerinventory', 'AddItem', 'green', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** got item: [slot:' .. slot .. '], itemname: ' .. self.PlayerData.items[slot].name .. ', added amount: ' .. amount .. ', new total amount: ' .. self.PlayerData.items[slot].amount)
                 return true
             elseif not itemInfo['unique'] and slot or slot and self.PlayerData.items[slot] == nil then
                 self.PlayerData.items[slot] = { name = itemInfo['name'], amount = amount, info = info or '', label = itemInfo['label'], description = itemInfo['description'] or '', weight = itemInfo['weight'], type = itemInfo['type'], unique = itemInfo['unique'], useable = itemInfo['useable'], image = itemInfo['image'], shouldClose = itemInfo['shouldClose'], slot = slot, combinable = itemInfo['combinable'] }
                 self.Functions.UpdatePlayerData()
+                if(item == 'cash') then
+                    self.PlayerData.money['cash'] = self.Functions.GetCash()
+                    self.Functions.UpdatePlayerData()
+                end
                 TriggerEvent('qb-log:server:CreateLog', 'playerinventory', 'AddItem', 'green', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** got item: [slot:' .. slot .. '], itemname: ' .. self.PlayerData.items[slot].name .. ', added amount: ' .. amount .. ', new total amount: ' .. self.PlayerData.items[slot].amount)
                 return true
             elseif itemInfo['unique'] or (not slot or slot == nil) or itemInfo['type'] == 'weapon' then
@@ -359,11 +409,19 @@ function QBCore.Player.CreatePlayer(PlayerData)
                 self.PlayerData.items[slot].amount = self.PlayerData.items[slot].amount - amount
                 self.Functions.UpdatePlayerData()
                 TriggerEvent('qb-log:server:CreateLog', 'playerinventory', 'RemoveItem', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** lost item: [slot:' .. slot .. '], itemname: ' .. self.PlayerData.items[slot].name .. ', removed amount: ' .. amount .. ', new total amount: ' .. self.PlayerData.items[slot].amount)
-                return true
+                if(item == 'cash') then
+                    self.PlayerData.money['cash'] = self.Functions.GetCash()
+                    self.Functions.UpdatePlayerData()
+                end
+                return true            
             elseif self.PlayerData.items[slot].amount == amount then
                 self.PlayerData.items[slot] = nil
                 self.Functions.UpdatePlayerData()
                 TriggerEvent('qb-log:server:CreateLog', 'playerinventory', 'RemoveItem', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** lost item: [slot:' .. slot .. '], itemname: ' .. item .. ', removed amount: ' .. amount .. ', item removed')
+                if(item == 'cash') then
+                    self.PlayerData.money['cash'] = self.Functions.GetCash()
+                    self.Functions.UpdatePlayerData()
+                end
                 return true
             end
         else
@@ -375,12 +433,30 @@ function QBCore.Player.CreatePlayer(PlayerData)
                         self.PlayerData.items[slot].amount = self.PlayerData.items[slot].amount - amountToRemove
                         self.Functions.UpdatePlayerData()
                         TriggerEvent('qb-log:server:CreateLog', 'playerinventory', 'RemoveItem', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** lost item: [slot:' .. slot .. '], itemname: ' .. self.PlayerData.items[slot].name .. ', removed amount: ' .. amount .. ', new total amount: ' .. self.PlayerData.items[slot].amount)
+                        if(item == 'cash') then
+                            self.PlayerData.money['cash'] = self.Functions.GetCash()
+                            self.Functions.UpdatePlayerData()
+                        end
                         return true
                     elseif self.PlayerData.items[slot].amount == amountToRemove then
                         self.PlayerData.items[slot] = nil
                         self.Functions.UpdatePlayerData()
                         TriggerEvent('qb-log:server:CreateLog', 'playerinventory', 'RemoveItem', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** lost item: [slot:' .. slot .. '], itemname: ' .. item .. ', removed amount: ' .. amount .. ', item removed')
+                        if(item == 'cash') then
+                            self.PlayerData.money['cash'] = self.Functions.GetCash()
+                            self.Functions.UpdatePlayerData()
+                        end
                         return true
+                    elseif self.PlayerData.items[slot].amount <= amountToRemove and item == 'cash' and amountToRemove <= self.Functions.GetCash() then
+                        print("masuk")
+                        amountToRemove = amountToRemove - self.PlayerData.items[slot].amount
+                        self.PlayerData.items[slot] = nil
+                        self.Functions.UpdatePlayerData()
+                        self.PlayerData.money['cash'] = self.Functions.GetCash()
+                        self.Functions.UpdatePlayerData()
+                        if(amountToRemove <= 0) then
+                            return true
+                        end
                     end
                 end
             end

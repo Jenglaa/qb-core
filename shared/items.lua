@@ -434,6 +434,7 @@ QBShared.Items = {
 
 			-- Material
 		['resit-burgershot'] 			 = {['name'] = 'resit-burgershot', 			  	['label'] = 'Resit Burgershot', 		['weight'] = 1, 		['type'] = 'item', 		['image'] = 'receiptbs.png', 				['unique'] = false, 	['useable'] = false, 	['shouldClose'] = false,   ['combinable'] = nil,   ['description'] = 'Resit makanan, Simpan untuk claim gaji daripada Boss'},
+		['cash'] 			 = {['name'] = 'cash', 			  	['label'] = 'Ringgit Malaysia', 		['weight'] = 0.01, 		['type'] = 'item', 		['image'] = 'RinggitMalaysia.png', 				['unique'] = false, 	['useable'] = false, 	['shouldClose'] = false,   ['combinable'] = nil,   ['description'] = 'Duit-Duit Malaysia Ringgit'},
 	
 	-- Tuner Job
 		["turbo"] 	 		        = {["name"] = "turbo", 					["label"] = "Turbocharger", 			["weight"] = 10000, 		["type"] = "item", 		["image"] = "TURBO.png", 			["unique"] = true, 		["useable"] = true, 	["shouldClose"] = true,	   ["combinable"] = nil,   ["description"] = ""},
